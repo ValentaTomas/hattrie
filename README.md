@@ -22,6 +22,7 @@ make test-fast
 - https://news.ycombinator.com/item?id=2336376
 - https://blog.gopheracademy.com/advent-2014/bloom-filters/
 - https://news.ycombinator.com/item?id=2336376
+- https://github.com/dcjones/hat-trie
 
 ## Tools
 - https://www.cbyexample.com/
