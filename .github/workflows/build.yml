@@ -9,7 +9,11 @@ on:
 
 jobs:
   ci:
-    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ ubuntu-latest ]
+    runs-on: ${{ matrix.os }}
     defaults:
       run:
         shell: bash
@@ -22,5 +26,25 @@ jobs:
           cache: true
           cache-dependency-path: go.sum
 
+      - name: Install GoReleaser
+        uses: goreleaser/goreleaser-action@v4
+        with:
+          install-only: true
+
       - name: Build
         run: make ci
+
+      - name: Upload coverage
+        uses: actions/upload-artifact@v3
+        with:
+          name: coverage-${{ matrix.os }}
+          path: coverage.*
+
+      - run: goreleaser release --rm-dist --snapshot
+        if: ${{ runner.os == 'Linux' }}
+
+      - name: Upload dist
+        uses: actions/upload-artifact@v3
+        with:
+          name: dist-${{ matrix.os }}
+          path: dist
