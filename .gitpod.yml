@@ -1,0 +1,17 @@
+tasks:
+  - name: Setup tools
+    init: |-
+      go install honnef.co/go/tools/cmd/staticcheck@latest
+      go install github.com/client9/misspell/cmd/misspell@latest
+      go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.50.1
+      go install github.com/goreleaser/goreleaser@latest
+
+  - init: go get && go build ./... && go test ./... && make
+
+github:
+  prebuilds:
+    branches: true
+
+vscode:
+  extensions:
+    - golang.go

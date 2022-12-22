@@ -3,11 +3,11 @@ SHELL := /bin/bash
 .DEFAULT_GOAL := all
 .PHONY: all
 all: ## build pipeline
-all: mod inst gen build spell lint test
+all: mod build spell lint test
 
 .PHONY: ci
 ci: ## CI build pipeline
-ci: all diff
+ci: all
 
 .PHONY: help
 help:
@@ -25,17 +25,6 @@ clean: ## remove files created during build pipeline
 mod: ## go mod tidy
 	$(call print-target)
 	go mod tidy
-	cd tools && go mod tidy
-
-.PHONY: inst
-inst: ## go install tools
-	$(call print-target)
-	cd tools && go install $(shell cd tools && go list -f '{{ join .Imports " " }}' -tags=tools)
-
-.PHONY: gen
-gen: ## go generate
-	$(call print-target)
-	go generate ./...
 
 .PHONY: build
 build: ## goreleaser build
@@ -59,12 +48,10 @@ test: ## go test
 	go test -race -covermode=atomic -coverprofile=coverage.out -coverpkg=./... ./...
 	go tool cover -html=coverage.out -o coverage.html
 
-.PHONY: diff
-diff: ## git diff
+.PHONY: test-fast
+test-fast: ## go test
 	$(call print-target)
-	git diff --exit-code
-	RES=$$(git status --porcelain) ; if [ -n "$$RES" ]; then echo $$RES && exit 1 ; fi
-
+	go test -race
 
 define print-target
     @printf "Executing target: \033[36m$@\033[0m\n"

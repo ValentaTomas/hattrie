@@ -5,7 +5,7 @@ linters-settings:
   gocyclo:
     min-complexity: 15
   goimports:
-    local-prefixes: github.com/golang-templates/seed
+    local-prefixes: github.com/valentatomas/fsa3
   govet:
     check-shadowing: true
   misspell:

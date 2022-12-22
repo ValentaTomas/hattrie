@@ -14,7 +14,7 @@
     // gopls
     "go.useLanguageServer": true,
     "gopls": {
-        "formatting.local": "github.com/golang-templates/seed",
+        "formatting.local": "github.com/valentatomas/fsa3",
         "formatting.gofumpt": true
     },
     // golangci-lint  
