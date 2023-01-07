@@ -15,6 +15,7 @@ make test-fast
 - https://nlp.fi.muni.cz/raslan/raslan13.pdf#page=71
 - http://www.jandaciuk.pl/fsa.html#FSApack
 - https://en.wikipedia.org/wiki/HAT-trie
+- https://tessil.github.io/2017/06/22/hat-trie.html
 
 ## Concepts
 - https://cs.wikipedia.org/wiki/Trie
