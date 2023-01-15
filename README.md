@@ -28,3 +28,4 @@ make test-fast
 ## Tools
 - https://www.cbyexample.com/
 - https://quii.gitbook.io/learn-go-with-tests
+- https://github.com/spaolacci/murmur3
