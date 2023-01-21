@@ -7,7 +7,18 @@ linters-settings:
   goimports:
     local-prefixes: github.com/valentatomas/fsa3
   govet:
-    check-shadowing: true
+    # Enable all analyzers.
+    # Default: false
+    enable-all: true
+    # Disable analyzers by name.
+    # Run `go tool vet help` to see all analyzers.
+    # Default: []
+    # Settings per analyzer.
+    settings:
+      shadow:
+        # Whether to be strict about shadowing; can be noisy.
+        # Default: false
+        strict: true
   misspell:
     locale: US
   nolintlint:
@@ -30,11 +41,13 @@ linters:
     - gochecknoinits
     - gocritic
     - goconst
+    - godot
     - gocyclo
     - gofumpt
     - goimports
     - revive
     - gomnd
+    - maligned # Deprecated but the go vet fieldalignment is not working right now
     - goprintffuncname
     - gosec
     - gosimple
@@ -44,6 +57,7 @@ linters:
     - nakedret
     - noctx
     - nolintlint
+    - prealloc
     - staticcheck
     - stylecheck
     - typecheck

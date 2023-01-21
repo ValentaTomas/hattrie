@@ -21,5 +21,21 @@
     "go.lintTool": "golangci-lint",
     "go.lintFlags": [
         "--fast"
-    ]
+    ],
+    "go.autocompleteUnimportedPackages": true,
+    "go.toolsManagement.autoUpdate": true,
+    "go.testOnSave": false,
+    "go.inlayHints.assignVariableTypes": true,
+    "go.inlayHints.compositeLiteralFields": true,
+    "go.inlayHints.compositeLiteralTypes": true,
+    "go.inlayHints.constantValues": true,
+    "go.inlayHints.functionTypeParameters": true,
+    "go.inlayHints.rangeVariableTypes": true,
+    "go.inlayHints.parameterNames": true,
+    "go.buildOnSave": "off",
+    "go.formatTool": "gofumpt",
+    "go.lintOnSave": "package",
+    "go.survey.prompt": false,
+    "go.useCodeSnippetsOnFunctionSuggestWithoutType": true,
+    "go.useCodeSnippetsOnFunctionSuggest": true
 }

@@ -1,18 +1,29 @@
+// Package hattrie implements HAT-trie which is an optimized cache-friendly data structure
+// that allows fast access to values by their associated keys.
+//
+// https://en.wikipedia.org/wiki/HAT-trie
 package hattrie
 
-const (
-	maxBucketSize = 16384
-)
-
-type node interface{}
-
-type trieNode struct{}
+const maxHashSizeBeforeBurst = 1 << 14
 
 type Trie struct {
-	root       node
-	KeysStored int
+	root node
 }
 
-func New(size int) *Trie {
-	return &Trie{}
+func New() *Trie {
+	return &Trie{
+		root: node{
+			arrayHash: &arrayHash{},
+		},
+	}
+}
+
+func (t *Trie) Get(key string) (ValueType, bool) {
+	return t.root.findValue(key)
+}
+
+// TODO: Should we normalize the byte representation when inserting?
+// https://go.dev/blog/normalization
+func (t *Trie) Put(key string, value ValueType) bool {
+	return t.root.insert(key, value)
 }

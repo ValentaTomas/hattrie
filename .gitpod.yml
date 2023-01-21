@@ -5,7 +5,10 @@ tasks:
       go install github.com/client9/misspell/cmd/misspell@latest
       go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.50.1
       go install github.com/goreleaser/goreleaser@latest
-      go get && go build ./... && go test ./... && make
+      go install mvdan.cc/gofumpt@latest
+      go install github.com/alexkohler/prealloc@latest
+      go install -v golang.org/x/tools/cmd/goimports@latest"
+      go get && go build ./...
 
 github:
   prebuilds:

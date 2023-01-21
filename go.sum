@@ -1,4 +1,2 @@
-github.com/spaolacci/murmur3 v1.1.0 h1:7c1g84S4BPRrfL5Xrdp6fOJ206sU9y293DDHaoy0bLI=
-github.com/spaolacci/murmur3 v1.1.0/go.mod h1:JwIasOWyU6f++ZhiEuf87xNszmSA2myDM2Kzu9HwQUA=
-golang.org/x/exp v0.0.0-20230116083435-1de6713980de h1:DBWn//IJw30uYCgERoxCg84hWtA97F4wMiKOIh00Uf0=
-golang.org/x/exp v0.0.0-20230116083435-1de6713980de/go.mod h1:CxIveKay+FTh1D0yPZemJVgC/95VzuuOLq5Qi4xnoYc=
+github.com/yourbasic/radix v0.0.0-20180308122924-cbe1cc82e907 h1:S5h7yNKStqF8CqFtgtMNMzk/lUI3p82LrX6h2BhlsTM=
+github.com/yourbasic/radix v0.0.0-20180308122924-cbe1cc82e907/go.mod h1:/7Fy/4/OyrkguTf2i2pO4erUD/8QAlrlmXSdSJPu678=
