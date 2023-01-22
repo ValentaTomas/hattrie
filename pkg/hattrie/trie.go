@@ -6,24 +6,25 @@ package hattrie
 
 const maxHashSizeBeforeBurst = 1 << 14
 
+// We don't need the delete and get methods for the FSA use case.
 type Trie struct {
 	root node
 }
 
 func New() *Trie {
 	return &Trie{
-		root: node{
-			arrayHash: &arrayHash{},
-		},
+		root: &arrayHash{},
 	}
 }
 
-func (t *Trie) Get(key string) (ValueType, bool) {
-	return t.root.findValue(key)
-}
-
-// TODO: Should we normalize the byte representation when inserting?
+// TODO: Should we normalize the UNICODE representation when inserting?
 // https://go.dev/blog/normalization
 func (t *Trie) Put(key string, value ValueType) bool {
-	return t.root.insert(key, value)
+	return put(t.root, key, value)
+}
+
+// We only need sorted iteration, unsorted used only internally.
+// TODO: Do we need sorted for FSA?
+func (t *Trie) ForEach(apply Apply) {
+	forEach(t.root, apply, true)
 }

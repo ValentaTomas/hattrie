@@ -13,7 +13,7 @@ type ValueType = uint64
 // According to the implemetation https://github.com/golang/go/blob/master/src/runtime/map.go,
 // the key and values are saved in separate arrays, instead of alternating length-key-value in one array, as in the C implementation mentioned further down.
 //
-// I haven't tried using the exact implementation from the hat-trie C lib (https://github.com/dcjones/hat-trie/blob/master/src/ahtable.h) yet.
+// I haven't tried using the exact implementation from the HAT-trie C lib (https://github.com/dcjones/hat-trie/blob/master/src/ahtable.h) yet.
 // That would require using unsafe pointers directly and I want to avoid that until I know that this is a performance bottleneck.
 //
 // All other custom array hash implementations that I tried were slower that the default Go map for the 16384 entries that the array hash should handle before the trie node burst.
@@ -27,10 +27,10 @@ func newArrayHash() arrayHash {
 // SortedKeys returns a slice of hash's keys, sorted lexicographically with the radix sort.
 // This slice could be then used for iterating the hash in order.
 func (h arrayHash) SortedKeys() []string {
-	// We can preallocate the slice.
+	// We can preallocate the slice to prevent resizing for each key.
 	keys := make([]string, 0, len(h))
 
-	// TODO: Try iterating while retrieving the actual values and sorting them then.
+	// TODO: Try iterating while retrieving the actual values and sorting them.
 	for k := range h {
 		keys = append(keys, k)
 	}

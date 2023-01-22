@@ -57,14 +57,14 @@ func TestArrayHashSortedKeys(t *testing.T) {
 
 func BenchmarkArrayHashInsert(b *testing.B) {
 	h := newArrayHash()
-	// b.StopTimer()
+	b.StopTimer()
 
-	// // Start with the half of the maximum key-value pairs
-	// for i := 0; i < arrayHashSize/2; i++ {
-	// 	value := ValueType(i)
-	// 	h[getKey(value)] = value
-	// }
-	// b.StartTimer()
+	// Start with the half of the maximum key-value pairs
+	for i := 0; i < arrayHashSize/2; i++ {
+		value := ValueType(i)
+		h[getKey(value)] = value
+	}
+	b.StartTimer()
 
 	for i := 0; i < b.N; i++ {
 		value := ValueType(i)
