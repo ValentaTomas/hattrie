@@ -1,121 +1,163 @@
 package hattrie
 
-const byteMaxValue = ^byte(0)
-
-// TODO: Implement the hybrid trie.
-type trieNode struct {
-	prefix byte
-	// We can directly use byte as an index into the array - the array then behaves like a map with a fixed size and no additional overhead.
-	// TODO: Make the trie more compact by using arrays with size 128 - splitting the byte into two nodes each handling 4 bits.
-	// The second node would be present only if necessary and would be a child of the first node.
-	children [byteMaxValue]node
-}
-
-// Usign interface and struct assertion between trieNode and arrayHash.
-// This way we don't have to embed trieNode and arrayHash and differentiate between them based on a nil pointer or
+// Usign interface and struct assertion between trieNode and trieContainer.
+// This way we don't have to embed trieNode and trieContainer and differentiate between them based on a nil pointer or
 // have overhead from using interface methods.
 type node interface{}
 
-type Apply func(key string, value ValueType)
-
-func findValue(start node, key string) (ValueType, bool) {
-	nearest, idx := findNearestTrieNode(start, key)
-
-	if t, ok := nearest.(*arrayHash); ok {
-		// TODO: We may need to check for nil values in type assert switches
-		v, success := (*t)[key[idx:]]
-		return v, success
-	}
-
-	return 0, false
+type trieNode struct {
+	// We can directly use byte as an index into the array - the array then behaves like a map with a fixed size and no additional overhead.
+	// TODO: Make the trie more compact by using arrays with size 128 - splitting the byte into two nodes each handling 4 bits.
+	// The second node would be present only if necessary and would be a child of the first node.
+	children   [byteMaxValue]node
+	value      ValueType
+	validValue bool
 }
 
-// We are using iteration instead of tail recursion for performance.
-func findNearestTrieNode(start node, key string) (nearest node, idx int) {
-	nearest = start
-	// []byte conversion (optimized by the compiler) is necessary so we don't iterate over runes.
+func newTrieNode(child node) *trieNode {
+	t := &trieNode{}
+
+	// https://groups.google.com/g/golang-dev/c/35W8LvT51vg
+	// Prevent range over array copy with &.
+	for i := range &t.children {
+		t.children[i] = child
+	}
+	return t
+}
+
+func (n *trieNode) setValue(value ValueType) {
+	n.value = value
+	n.validValue = true
+}
+
+func (n *trieNode) findNearest(key string) (nearest node, parent *trieNode, prefixIdx int) {
+	nearest = n
+	parent = n
 	for i, head := range []byte(key) {
-		var newNearest node
-
-		if t, ok := nearest.(*trieNode); ok {
-			newNearest = t.children[head]
+		switch t := nearest.(type) {
+		case *trieNode:
+			parent = t
+			maybeNearest := t.children[head]
+			if maybeNearest != nil {
+				nearest = maybeNearest
+			} else {
+				break
+			}
+		case *trieContainer:
+			break
 		}
+		prefixIdx = i
+	}
+	return nearest, parent, prefixIdx
+}
 
-		if _, ok := newNearest.(*trieNode); ok {
-			nearest = newNearest
-			idx = i
+func (n *trieNode) splitContainer(child *trieContainer) (*trieNode, *trieContainer) {
+	// Turn pure into hybrid
+	if !child.hybrid {
+		newParent := newTrieNode(child)
+		n.children[child.splitStart] = newParent
+
+		// TODO: Bucket empty key? -> move to trie node
+
+		child.hybrid = true
+		return newParent, child
+	}
+
+	var occurrences [byteMaxValue]int
+
+	for k := range child.pairs {
+		occurrences[k[0]]++
+	}
+
+	split := int(child.splitStart)
+	totalSize := len(child.pairs)
+	leftSize := occurrences[split]
+	rightSize := totalSize - leftSize
+
+	for i, o := range occurrences[1:] {
+		delta := abs((leftSize + o) - (rightSize - o))
+		if delta <= leftSize-rightSize && leftSize+o < totalSize {
+			split = i
+			leftSize += o
+			rightSize += o
 		} else {
 			break
 		}
 	}
-	return nearest, idx
-}
 
-func burst(n node, head byte) {
-	if t, ok := n.(*trieNode); ok {
-		child := t.children[head]
+	// TODO: Handle the preallocation and special cases better
+	left := newTrieContainer(leftSize)
 
-		if oldHash, ok := child.(*arrayHash); ok {
-			container := &trieNode{}
-			t.children[head] = container
+	left.splitStart = child.splitStart
+	left.splitEnd = byte(split)
 
-			for k, v := range *oldHash {
-				newChild := container.children[k[0]]
-
-				if subHash, ok := newChild.(*arrayHash); ok {
-					if subHash == nil {
-						subHash = &arrayHash{}
-						container.children[k[0]] = subHash
-					}
-					(*subHash)[k[1:]] = v
-				}
-			}
-		}
-	}
-}
-
-// TODO: Use iteration instead of a recursion.
-func put(start node, key string, value ValueType) bool {
-	nearest, idx := findNearestTrieNode(start, key)
-
-	if t, ok := nearest.(*arrayHash); ok {
-		if len(*t) < maxHashSizeBeforeBurst {
-			(*t)[key[idx:]] = value
-			return true
-		}
+	if left.splitStart != left.splitEnd {
+		left.hybrid = true
 	}
 
-	burst(nearest, key[0])
-	return put(start, key[idx:], value)
-}
+	right := newTrieContainer(rightSize)
 
-// TODO: Try using iterator struct instead of passing a function to apply.
-func forEach(start node, apply Apply, sorted bool) {
-	stack := []node{start}
-	// var prefix []byte
+	right.splitStart = byte(split + 1)
+	right.splitEnd = child.splitEnd
 
-	for len(stack) > 0 {
-		visiting := stack[len(stack)-1]
-		stack = stack[:len(stack)-1]
-		// TODO: Check if we are iterating nodes in the lexicographic order
+	if right.splitStart != right.splitEnd {
+		right.hybrid = true
+	}
 
-		switch t := visiting.(type) {
-		case *trieNode:
-			stack = append(stack, t.children[:]...)
+	for i := left.splitStart; i <= left.splitEnd; i++ {
+		n.children[i] = left
+	}
 
-		case *arrayHash:
-			if sorted {
-				for _, key := range t.SortedKeys() {
-					value := (*t)[key]
-					// TODO: Assemble the whole key
-					apply(key, value)
-				}
-			} else {
-				for key, value := range *t {
-					// TODO: Assemble the whole key
-					apply(key, value)
-				}
-			}
+	for i := right.splitStart; i <= right.splitEnd; i++ {
+		n.children[i] = right
+	}
+
+	for k, v := range child.pairs {
+		if k[0] <= left.splitEnd {
+			left.Put(k, 0, v)
+		} else {
+			right.Put(k, 0, v)
 		}
 	}
+
+	if leftSize >= maxContainerSizeBeforeBurst {
+		return n, left
+	} else if rightSize >= maxContainerSizeBeforeBurst {
+		return n, right
+	}
+
+	return n, left
+}
+
+func abs(a int) int {
+	if a >= 0 {
+		return a
+	}
+	return -a
+}
+
+type trieIteratorStack struct {
+	c     byte
+	level uint
+	n     node
+	next  *trieIteratorStack
+}
+
+type TrieIterator struct {
+	key    string
+	prefix string
+
+	// TODO: Do we need empty key values at all?
+	// emptyKey   bool
+	// emptyValue ValueType
+
+	stack *trieIteratorStack
+}
+
+// FSA needs to process all pairs at once, so we don't have to implement an iterator.
+// TODO: Check if using the function (that can use closure) is affecting performance too much.
+func (t *Trie) iterate(sorted bool, fn func(key string, value ValueType)) {
+	i := &TrieIterator{}
+
+	i.
 }

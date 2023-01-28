@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"sort"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 // TODO: Use assert
@@ -144,6 +146,42 @@ func BenchmarkTrieContainerIterate(b *testing.B) {
 		for _, v := range c.pairs {
 			_ = v
 		}
+	}
+
+	b.ReportAllocs()
+}
+
+func BenchmarkClosure(b *testing.B) {
+	ls := make([]int, 300)
+
+	for i := 0; i < b.N; i++ {
+		var val int
+
+		fn := func(v int) {
+			val = v
+		}
+
+		for i := range ls {
+			fn(i)
+		}
+
+		assert.GreaterOrEqual(b, val, 0)
+	}
+
+	b.ReportAllocs()
+}
+
+func BenchmarkLoop(b *testing.B) {
+	ls := make([]int, 300)
+
+	for i := 0; i < b.N; i++ {
+		var val int
+
+		for i := range ls {
+			val = i
+		}
+
+		assert.GreaterOrEqual(b, val, 0)
 	}
 
 	b.ReportAllocs()

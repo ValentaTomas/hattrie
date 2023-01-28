@@ -13,7 +13,7 @@ make test-fast
 make benchmark
 ```
 
-## Articles
+## Reading
 - https://nlp.fi.muni.cz/raslan/raslan16.pdf#page=151
 - https://nlp.fi.muni.cz/raslan/raslan13.pdf#page=71
 - http://www.jandaciuk.pl/fsa.html#FSApack
@@ -36,12 +36,14 @@ make benchmark
 - https://go101.org/article/memory-layout.html
 - https://planetscale.com/blog/generics-can-make-your-go-code-slower
 - https://go101.org/article/memory-block.html
+- https://go101.org/optimizations/101.html
 - https://stackoverflow.com/questions/41030545/are-we-overusing-pass-by-pointer-in-go
 - https://pthevenet.com/posts/programming/go/bytesliceindexedmaps/
 - https://en.m.wikipedia.org/wiki/Open_addressing
 - https://en.m.wikipedia.org/wiki/Linear_probing
 - https://en.m.wikipedia.org/wiki/MurmurHash
 - https://github.com/golang/go/wiki/CompilerOptimizations
+- https://github.com/dgryski/go-perfbook
 
 ## Code Reference
 - Burst trie - https://github.com/nlfiedler/sortingo/blob/master/sort/burstsort.go
