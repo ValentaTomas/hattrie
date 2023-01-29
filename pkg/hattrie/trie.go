@@ -7,10 +7,13 @@
 // https://en.wikipedia.org/wiki/HAT-trie
 package hattrie
 
-import "math"
+import (
+	"math"
+)
 
 const (
 	byteMaxValue                = math.MaxUint8
+	numberOfByteValues          = byteMaxValue + 1
 	maxContainerSizeBeforeBurst = 1 << 14
 	initialContainerSize        = 1 << 12
 )
@@ -33,40 +36,34 @@ func New() *Trie {
 	}
 }
 
-// TODO: Can we keep overwriting the original value when reinsert the same word?
 // We ignore the empty key "" to simplify the code. That should be ok in the context of FSA.
-func (t *Trie) Put(key string, value ValueType) {
+func (t *Trie) Put(key string, value Value) {
+	// TODO: Check if this optimization is worth it.
 	size := len(key)
 	if t.longestKeySize < size {
 		t.longestKeySize = size
 	}
 
-	// if size == 0 {
-	// 	t.setValue(value)
-	// 	return
-	// }
-
 	nearest, parent, prefixIdx := t.trieNode.findNearest(key)
 
-	switch t := nearest.(type) {
+	switch n := nearest.(type) {
 	case *trieNode:
 		if size == prefixIdx+1 {
-			t.setValue(value)
+			n.setValue(value)
 			return
 		}
-
 	case *trieContainer:
 		if size == prefixIdx+1 {
-			if t.hybrid {
+			if n.hybrid {
 				parent.setValue(value)
 				return
 			}
 		}
 
-		t.Put(key, prefixIdx, value)
+		n.Insert(key, prefixIdx, value)
 
-		for len(t.pairs) >= maxContainerSizeBeforeBurst {
-			parent, t = parent.splitContainer(t)
+		for len(n.pairs) >= maxContainerSizeBeforeBurst {
+			parent, n = parent.splitContainer(n)
 		}
 	}
 }

@@ -13,7 +13,7 @@ import (
 const containerSize = maxContainerSizeBeforeBurst
 
 // TODO: Test several lengths of keys or just use a proper dictionary.
-func getKey(i ValueType) string {
+func getKey(i Value) string {
 	return fmt.Sprintf("%d-%d", i, i)
 	// return fmt.Sprintf("%d%d%d%d%d%d", i, i, i, i, i, i)
 }
@@ -21,9 +21,9 @@ func getKey(i ValueType) string {
 // func TestTrieContainerPut(t *testing.T) {
 // 	c := newTrieContainer(initialContainerSize)
 
-// 	c.Put(getKey(1), 0, 1)
+// 	c.Insert(getKey(1), 0, 1)
 
-// 	c.Put(getKey(2), 1, 2)
+// 	c.Insert(getKey(2), 1, 2)
 
 // 	if c.pairs[getKey(1)[0+1:]] != 1 {
 // 		t.Errorf("Wrong value retrieved for prefix 0: key %v", getKey(1)[0:])
@@ -39,9 +39,8 @@ func TestTrieContainerPutHybrid(t *testing.T) {
 
 	c.hybrid = true
 
-	c.Put(getKey(1), 0, 1)
-
-	c.Put(getKey(2), 1, 2)
+	c.Insert(getKey(1), 0, 1)
+	c.Insert(getKey(2), 1, 2)
 
 	if c.pairs[getKey(1)[0:]] != 1 {
 		t.Errorf("Wrong value retrieved for prefix 0: key %v", getKey(1)[0:])
@@ -56,7 +55,7 @@ func TestTrieContainerSortedKeys(t *testing.T) {
 	c := newTrieContainer(initialContainerSize)
 	pairs := []struct {
 		key   string
-		value ValueType
+		value Value
 	}{
 		{"c", 3},
 		{"a", 1},
@@ -71,7 +70,7 @@ func TestTrieContainerSortedKeys(t *testing.T) {
 	sortedKeys := c.SortedKeys()
 	sorted := make([]struct {
 		key   string
-		value ValueType
+		value Value
 	}, 0, len(sortedKeys))
 
 	for _, key := range sortedKeys {
@@ -79,7 +78,7 @@ func TestTrieContainerSortedKeys(t *testing.T) {
 
 		sorted = append(sorted, struct {
 			key   string
-			value ValueType
+			value Value
 		}{
 			key:   key,
 			value: value,
@@ -98,16 +97,16 @@ func BenchmarkTrieContainerPut(b *testing.B) {
 	c := newTrieContainer(initialContainerSize)
 	// Start with the half of the maximum key-value pairs
 	for i := 0; i < containerSize/2; i++ {
-		value := ValueType(i)
+		value := Value(i)
 		// c.pairs[getKey(value)] = value
-		c.Put(getKey(value), 0, value)
+		c.Insert(getKey(value), 0, value)
 	}
 	b.StartTimer()
 
 	for i := 0; i < b.N; i++ {
-		value := ValueType(i)
+		value := Value(i)
 		// c.pairs[getKey(value)] = value
-		c.Put(getKey(value), 0, value)
+		c.Insert(getKey(value), 0, value)
 	}
 
 	b.ReportAllocs()
@@ -118,7 +117,7 @@ func BenchmarkTrieContainerSortedIterate(b *testing.B) {
 	c := newTrieContainer(initialContainerSize)
 
 	for i := 0; i < containerSize; i++ {
-		value := ValueType(i)
+		value := Value(i)
 		c.pairs[getKey(value)] = value
 	}
 	b.StartTimer()
@@ -137,7 +136,7 @@ func BenchmarkTrieContainerIterate(b *testing.B) {
 	c := newTrieContainer(initialContainerSize)
 
 	for i := 0; i < containerSize; i++ {
-		value := ValueType(i)
+		value := Value(i)
 		c.pairs[getKey(value)] = value
 	}
 	b.StartTimer()

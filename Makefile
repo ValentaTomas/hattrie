@@ -51,7 +51,7 @@ test: ## go test
 .PHONY: test-fast
 test-fast: ## go test
 	$(call print-target)
-	go test -race -v ./...
+	go test -v ./...
 
 .PHONY: benchmark
 benchmark: ## go test

@@ -9,8 +9,8 @@ type trieNode struct {
 	// We can directly use byte as an index into the array - the array then behaves like a map with a fixed size and no additional overhead.
 	// TODO: Make the trie more compact by using arrays with size 128 - splitting the byte into two nodes each handling 4 bits.
 	// The second node would be present only if necessary and would be a child of the first node.
-	children   [byteMaxValue]node
-	value      ValueType
+	children   [numberOfByteValues]node
+	value      Value
 	validValue bool
 }
 
@@ -25,9 +25,11 @@ func newTrieNode(child node) *trieNode {
 	return t
 }
 
-func (n *trieNode) setValue(value ValueType) {
-	n.value = value
-	n.validValue = true
+func (n *trieNode) setValue(value Value) {
+	if !n.validValue {
+		n.value = value
+		n.validValue = true
+	}
 }
 
 func (n *trieNode) findNearest(key string) (nearest node, parent *trieNode, prefixIdx int) {
@@ -46,7 +48,7 @@ func (n *trieNode) findNearest(key string) (nearest node, parent *trieNode, pref
 		case *trieContainer:
 			break
 		}
-		prefixIdx = i
+		prefixIdx = i + 1
 	}
 	return nearest, parent, prefixIdx
 }
@@ -57,13 +59,11 @@ func (n *trieNode) splitContainer(child *trieContainer) (*trieNode, *trieContain
 		newParent := newTrieNode(child)
 		n.children[child.splitStart] = newParent
 
-		// TODO: Bucket empty key? -> move to trie node
-
 		child.hybrid = true
 		return newParent, child
 	}
 
-	var occurrences [byteMaxValue]int
+	var occurrences [numberOfByteValues]int
 
 	for k := range child.pairs {
 		occurrences[k[0]]++
@@ -114,9 +114,9 @@ func (n *trieNode) splitContainer(child *trieContainer) (*trieNode, *trieContain
 
 	for k, v := range child.pairs {
 		if k[0] <= left.splitEnd {
-			left.Put(k, 0, v)
+			left.Insert(k, 0, v)
 		} else {
-			right.Put(k, 0, v)
+			right.Insert(k, 0, v)
 		}
 	}
 
@@ -136,28 +136,70 @@ func abs(a int) int {
 	return -a
 }
 
-type trieIteratorStack struct {
-	c     byte
-	level uint
-	n     node
-	next  *trieIteratorStack
+type stackItem struct {
+	prefix  *byte
+	item    node
+	visited bool
 }
 
-type TrieIterator struct {
-	key    string
-	prefix string
-
-	// TODO: Do we need empty key values at all?
-	// emptyKey   bool
-	// emptyValue ValueType
-
-	stack *trieIteratorStack
-}
-
-// FSA needs to process all pairs at once, so we don't have to implement an iterator.
+// FSA needs to process all pairs, so we don't have to implement an iterator.
 // TODO: Check if using the function (that can use closure) is affecting performance too much.
-func (t *Trie) iterate(sorted bool, fn func(key string, value ValueType)) {
-	i := &TrieIterator{}
+func (t *Trie) ForEach(fn func(key string, value Value)) {
+	// TODO: What is the ideal size for the preallocated stack?
+	stack := make([]*stackItem, 0, numberOfByteValues+1)
+	stack = append(stack, &stackItem{
+		prefix:  nil,
+		visited: false,
+		item:    t.trieNode,
+	})
 
-	i.
+	prefix := make([]byte, 0, t.longestKeySize)
+
+	for len(stack) > 0 {
+		n := stack[len(stack)-1]
+
+		switch t := n.item.(type) {
+		case *trieNode:
+			if n.visited {
+				stack = stack[:len(stack)-1]
+				if len(prefix) > 0 {
+					prefix = prefix[:len(prefix)-1]
+				}
+				continue
+			}
+
+			if n.prefix != nil {
+				prefix = append(prefix, *n.prefix)
+			}
+
+			if t.validValue {
+				fn(string(prefix), t.value)
+			}
+
+			var previousChild node
+			for i := byteMaxValue; i >= 0; i-- {
+				if t.children[i] != nil && t.children[i] != previousChild {
+					p := byte(i)
+					stack = append(stack, &stackItem{
+						prefix:  &p,
+						visited: false,
+						item:    t.children[i],
+					})
+				}
+				previousChild = t.children[i]
+			}
+			n.visited = true
+		case *trieContainer:
+			for _, k := range t.SortedKeys() {
+				subkey := t.getKey(k, 0)
+				if t.hybrid {
+					// ERR: [1:] slice out of bounds
+					fn(string(append(prefix, subkey[1:]...)), t.pairs[subkey])
+				} else {
+					fn(string(append(prefix, subkey...)), t.pairs[subkey])
+				}
+			}
+			stack = stack[:len(stack)-1]
+		}
+	}
 }

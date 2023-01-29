@@ -4,8 +4,8 @@ import (
 	"github.com/yourbasic/radix"
 )
 
-// ValueType is an alias for values in the array hash.
-type ValueType = uint64
+// Value is an alias for values in the array hash.
+type Value = uint64
 
 // pairs is a type definition for string to uint64 map.
 //
@@ -20,7 +20,7 @@ type ValueType = uint64
 //
 // TODO: By not using pointers in the map the GC may be able to skip it, but the string as key may be preventing this.
 // TODO: Should we limit the maximum key size so we can use byte arrays as keys?
-type pairs map[string]ValueType
+type pairs map[string]Value
 
 type trieContainer struct {
 	pairs
@@ -60,20 +60,29 @@ func (c *trieContainer) SortedKeys() []string {
 	return keys
 }
 
-func (c *trieContainer) Put(key string, prefixIdx int, value ValueType) {
-	// TODO: []byte to string conversion in L-value map element index expressions may allocate - beware and test this if we are changing the keys to []byte.
-	// TODO: If we need "upserting" put — change value type to *uint64 and handle upsert by retrieving the value once and cheking for nil. Can we do the upsert with some combination of assignment/bitwise operations?
+func (c *trieContainer) getKey(key string, prefixIdx int) string {
 	if c.hybrid {
 		if prefixIdx == 0 {
-			c.pairs[key] = value
+			return key
 		} else {
-			c.pairs[key[prefixIdx:]] = value
+			return key[prefixIdx:]
 		}
 	} else {
 		if prefixIdx == 0 {
-			c.pairs[key[1:]] = value
+			return key[1:]
 		} else {
-			c.pairs[key[prefixIdx:]] = value
+			return key[prefixIdx:]
 		}
+	}
+}
+
+func (c *trieContainer) Insert(key string, prefixIdx int, value Value) {
+	// TODO: []byte to string conversion in L-value map element index expressions may allocate - beware and test this if we are changing the keys to []byte.
+
+	key = c.getKey(key, prefixIdx)
+	if _, ok := c.pairs[key]; !ok {
+		// TODO: We need to lookup the value in map twice if it is new - aside from a custom implementing the map, can we improve this?
+		// Even if this isn't optimized out by the compiler, it should happen only in maybe some 0,27%-1,6% (unique words) depending on corpus.
+		c.pairs[key] = value
 	}
 }
