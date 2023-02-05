@@ -35,29 +35,35 @@ func (n *trieNode) setValue(value Value) {
 func (n *trieNode) findNearest(key string) (nearest node, parent *trieNode, prefixIdx int) {
 	nearest = n
 	parent = n
-	for i, head := range []byte(key) {
+
+NearLoop:
+	for _, head := range []byte(key) {
 		switch t := nearest.(type) {
 		case *trieNode:
 			parent = t
 			maybeNearest := t.children[head]
 			if maybeNearest != nil {
+				prefixIdx++
 				nearest = maybeNearest
 			} else {
-				break
+				break NearLoop
 			}
 		case *trieContainer:
-			break
+			break NearLoop
 		}
-		prefixIdx = i + 1
 	}
 	return nearest, parent, prefixIdx
 }
 
 func (n *trieNode) splitContainer(child *trieContainer) (*trieNode, *trieContainer) {
-	// Turn pure into hybrid
 	if !child.hybrid {
 		newParent := newTrieNode(child)
 		n.children[child.splitStart] = newParent
+
+		if value, ok := child.pairs[""]; ok {
+			newParent.setValue(value)
+			delete(child.pairs, "")
+		}
 
 		child.hybrid = true
 		return newParent, child
@@ -85,7 +91,7 @@ func (n *trieNode) splitContainer(child *trieContainer) (*trieNode, *trieContain
 		}
 	}
 
-	// TODO: Handle the preallocation and special cases better
+	// TODO: Handle the preallocation and special cases better.
 	left := newTrieContainer(leftSize)
 
 	left.splitStart = child.splitStart
@@ -114,9 +120,9 @@ func (n *trieNode) splitContainer(child *trieContainer) (*trieNode, *trieContain
 
 	for k, v := range child.pairs {
 		if k[0] <= left.splitEnd {
-			left.Insert(k, 0, v)
+			left.Insert(k, v)
 		} else {
-			right.Insert(k, 0, v)
+			right.Insert(k, v)
 		}
 	}
 
@@ -190,13 +196,16 @@ func (t *Trie) ForEach(fn func(key string, value Value)) {
 			}
 			n.visited = true
 		case *trieContainer:
-			for _, k := range t.SortedKeys() {
-				subkey := t.getKey(k, 0)
+			for _, key := range t.SortedKeys() {
 				if t.hybrid {
-					// ERR: [1:] slice out of bounds
-					fn(string(append(prefix, subkey[1:]...)), t.pairs[subkey])
+					hybridPrefix := prefix
+					if len(prefix) > 0 {
+						hybridPrefix = prefix[:len(prefix)-1]
+					}
+
+					fn(string(append(hybridPrefix, key...)), t.pairs[key])
 				} else {
-					fn(string(append(prefix, subkey...)), t.pairs[subkey])
+					fn(string(append(prefix, key...)), t.pairs[key])
 				}
 			}
 			stack = stack[:len(stack)-1]

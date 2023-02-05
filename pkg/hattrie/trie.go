@@ -46,21 +46,25 @@ func (t *Trie) Put(key string, value Value) {
 
 	nearest, parent, prefixIdx := t.trieNode.findNearest(key)
 
+	remainingKey := key[prefixIdx:]
+
 	switch n := nearest.(type) {
 	case *trieNode:
-		if size == prefixIdx+1 {
+		if len(remainingKey) == 0 {
 			n.setValue(value)
 			return
 		}
 	case *trieContainer:
-		if size == prefixIdx+1 {
-			if n.hybrid {
-				parent.setValue(value)
-				return
-			}
+		if parent != t.trieNode && len(remainingKey) == 0 && n.hybrid {
+			parent.setValue(value)
+			return
 		}
 
-		n.Insert(key, prefixIdx, value)
+		if n.hybrid {
+			n.Insert(key[prefixIdx-1:], value)
+		} else {
+			n.Insert(remainingKey, value)
+		}
 
 		for len(n.pairs) >= maxContainerSizeBeforeBurst {
 			parent, n = parent.splitContainer(n)

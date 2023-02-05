@@ -39,8 +39,8 @@ func TestTrieContainerPutHybrid(t *testing.T) {
 
 	c.hybrid = true
 
-	c.Insert(getKey(1), 0, 1)
-	c.Insert(getKey(2), 1, 2)
+	c.Insert(getKey(1), 1)
+	c.Insert(getKey(2), 2)
 
 	if c.pairs[getKey(1)[0:]] != 1 {
 		t.Errorf("Wrong value retrieved for prefix 0: key %v", getKey(1)[0:])
@@ -99,14 +99,14 @@ func BenchmarkTrieContainerPut(b *testing.B) {
 	for i := 0; i < containerSize/2; i++ {
 		value := Value(i)
 		// c.pairs[getKey(value)] = value
-		c.Insert(getKey(value), 0, value)
+		c.Insert(getKey(value), value)
 	}
 	b.StartTimer()
 
 	for i := 0; i < b.N; i++ {
 		value := Value(i)
 		// c.pairs[getKey(value)] = value
-		c.Insert(getKey(value), 0, value)
+		c.Insert(getKey(value), value)
 	}
 
 	b.ReportAllocs()

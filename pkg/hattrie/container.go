@@ -5,7 +5,7 @@ import (
 )
 
 // Value is an alias for values in the array hash.
-type Value = uint64
+type Value = uint32
 
 // pairs is a type definition for string to uint64 map.
 //
@@ -60,26 +60,8 @@ func (c *trieContainer) SortedKeys() []string {
 	return keys
 }
 
-func (c *trieContainer) getKey(key string, prefixIdx int) string {
-	if c.hybrid {
-		if prefixIdx == 0 {
-			return key
-		} else {
-			return key[prefixIdx:]
-		}
-	} else {
-		if prefixIdx == 0 {
-			return key[1:]
-		} else {
-			return key[prefixIdx:]
-		}
-	}
-}
-
-func (c *trieContainer) Insert(key string, prefixIdx int, value Value) {
+func (c *trieContainer) Insert(key string, value Value) {
 	// TODO: []byte to string conversion in L-value map element index expressions may allocate - beware and test this if we are changing the keys to []byte.
-
-	key = c.getKey(key, prefixIdx)
 	if _, ok := c.pairs[key]; !ok {
 		// TODO: We need to lookup the value in map twice if it is new - aside from a custom implementing the map, can we improve this?
 		// Even if this isn't optimized out by the compiler, it should happen only in maybe some 0,27%-1,6% (unique words) depending on corpus.
