@@ -20,6 +20,7 @@ make benchmark
 - https://en.wikipedia.org/wiki/HAT-trie
 - https://tessil.github.io/2017/06/22/hat-trie.html
 - https://dave.cheney.net/2019/05/07/prefer-table-driven-tests
+- https://dave.cheney.net/high-performance-go
 - https://www.practical-go-lessons.com/chap-7-hexadecimal-octal-ascii-utf8-unicode-runes
 - https://www.practical-go-lessons.com/chap-34-benchmarks
 - https://homepages.dcc.ufmg.br/~nivio/papers/cikm07.pdf
@@ -44,6 +45,16 @@ make benchmark
 - https://en.m.wikipedia.org/wiki/MurmurHash
 - https://github.com/golang/go/wiki/CompilerOptimizations
 - https://github.com/dgryski/go-perfbook
+- https://godbolt.org/z/e1vaarMKM
+- Can we paralellize the sorting of hash keys and inserting to the trie?
+  - https://github.com/twotwotwo/sorts
+  - https://github.com/jfcg/sorty
+- https://go.dev/doc/pgo
+- https://go.dev/blog/go1.20
+- https://groups.google.com/g/golang-nuts/c/baU4PZFyBQQ
+- https://reader.elsevier.com/reader/sd/pii/S0304397512003787?token=8F9D18B0B717058FD51BB489E748AAA0DF138B0F65C0576398B6985CB45262B88779E7DE3AB4A01DEA11E481C991474B&originRegion=eu-west-1&originCreation=20230204163136
+- https://aclanthology.org/J00-1002.pdf
+- https://github.com/ricardoerikson/benchmark-golang-maps
 
 ## Code Reference
 - Burst trie - https://github.com/nlfiedler/sortingo/blob/master/sort/burstsort.go
