@@ -37,22 +37,56 @@ func newDiskLexicon(dirpath string, flags int, permissions fs.FileMode) (*diskLe
 	if err != nil {
 		return nil, fmt.Errorf("error opening lexicon file '%s': %+v", lexiconPath, err)
 	}
+	defer func() {
+		if err != nil {
+			lexicon.Close()
+		}
+	}()
 
 	indicesPath := filepath.Join(cleanPath, lexiconIndicesFileName)
 	indices, err := os.OpenFile(indicesPath, flags, permissions)
 	if err != nil {
 		return nil, fmt.Errorf("error opening lexicon indices file '%s': %+v", indicesPath, err)
 	}
+	defer func() {
+		if err != nil {
+			indices.Close()
+		}
+	}()
 
 	sortedPath := filepath.Join(cleanPath, sortedFileName)
 	sorted, err := os.OpenFile(sortedPath, flags, permissions)
 	if err != nil {
 		return nil, fmt.Errorf("error opening sorted lexicon file '%s': %+v", sortedPath, err)
 	}
+	defer func() {
+		if err != nil {
+			sorted.Close()
+		}
+	}()
 
 	return &diskLexicon{
 		lexicon: lexicon,
 		indices: indices,
 		sorted:  sorted,
 	}, nil
+}
+
+func (d *diskLexicon) Close() error {
+	err := d.lexicon.Close()
+	if err != nil {
+		return fmt.Errorf("error closing lexicon file: %+v", err)
+	}
+
+	err = d.indices.Close()
+	if err != nil {
+		return fmt.Errorf("error closing lexicon indices file: %+v", err)
+	}
+
+	err = d.sorted.Close()
+	if err != nil {
+		return fmt.Errorf("error closing sorted lexicon file: %+v", err)
+	}
+
+	return nil
 }

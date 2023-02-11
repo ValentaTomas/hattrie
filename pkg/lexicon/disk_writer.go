@@ -47,6 +47,9 @@ func (w *DiskLexiconWriter) WriteSorted(id ID) error {
 	if err != nil {
 		return fmt.Errorf("error writing id '%d' to lexicon sorted file: %+v", id, err)
 	}
-
 	return nil
+}
+
+func (w *DiskLexiconWriter) Close() error {
+	return w.diskLexicon.Close()
 }

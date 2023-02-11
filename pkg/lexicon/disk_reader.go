@@ -86,3 +86,7 @@ func (l *DiskLexiconReader) ID(word string) (id ID, err error) {
 	}
 	return id, nil
 }
+
+func (r *DiskLexiconReader) Close() error {
+	return r.diskLexicon.Close()
+}
