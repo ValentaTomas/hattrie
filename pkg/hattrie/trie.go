@@ -28,6 +28,8 @@ type Trie struct {
 	longestKeySize int
 }
 
+// New returns a pointer to a new Trie.
+// The trie is initialized to be empty.
 func New() *Trie {
 	c := newTrieContainer(initialContainerSize)
 	c.hybrid = true
@@ -40,7 +42,7 @@ func New() *Trie {
 func (t *Trie) Put(key string, value Value) {
 	// TODO: Check if this optimization is worth it.
 	size := len(key)
-	if t.longestKeySize < size {
+	if size > t.longestKeySize {
 		t.longestKeySize = size
 	}
 
