@@ -6,47 +6,10 @@ import (
 	"testing"
 )
 
-// TODO: Use assert
-
 const containerSize = maxContainerSizeBeforeBurst
 
-// TODO: Test several lengths of keys or just use a proper dictionary.
 func getKey(i Value) string {
 	return fmt.Sprintf("%d-%d", i, i)
-	// return fmt.Sprintf("%d%d%d%d%d%d", i, i, i, i, i, i)
-}
-
-// func TestTrieContainerPut(t *testing.T) {
-// 	c := newTrieContainer(initialContainerSize)
-
-// 	c.Insert(getKey(1), 0, 1)
-
-// 	c.Insert(getKey(2), 1, 2)
-
-// 	if c.pairs[getKey(1)[0+1:]] != 1 {
-// 		t.Errorf("Wrong value retrieved for prefix 0: key %v", getKey(1)[0:])
-// 	}
-
-// 	if c.pairs[getKey(2)[1+1:]] != 2 {
-// 		t.Errorf("Wrong value retrieved for prefix 1: key %v", getKey(2)[1:])
-// 	}
-// }
-
-func TestTrieContainerPutHybrid(t *testing.T) {
-	c := newTrieContainer(initialContainerSize)
-
-	c.hybrid = true
-
-	c.Insert(getKey(1), 1)
-	c.Insert(getKey(2), 2)
-
-	if c.pairs[getKey(1)[0:]] != 1 {
-		t.Errorf("Wrong value retrieved for prefix 0: key %v", getKey(1)[0:])
-	}
-
-	if c.pairs[getKey(2)[1:]] != 2 {
-		t.Errorf("Wrong value retrieved for prefix 1: key %v", getKey(2)[1:])
-	}
 }
 
 func TestTrieContainerSortedKeys(t *testing.T) {

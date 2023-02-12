@@ -18,7 +18,7 @@ const (
 
 	nullByte = byte(0)
 
-	positionByteSize = 32 / 8
+	positionByteSize = 4
 )
 
 type diskLexicon struct {

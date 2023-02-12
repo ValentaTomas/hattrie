@@ -66,3 +66,7 @@ make benchmark
 - Array hash - https://github.com/Tessil/array-hash
 - Bloom filter? - https://github.com/GuillaumeHolley/BloomFilterTrie
 - Go map (hash array) - https://github.com/golang/go/blob/master/src/runtime/map.go
+
+## Debug
+- Can be pure with max container 2 with alphabet 256?
+- Splits not halving links, only ocurences-> too many pure nodes?

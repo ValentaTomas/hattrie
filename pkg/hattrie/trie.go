@@ -14,22 +14,14 @@ import (
 const (
 	byteMaxValue                = math.MaxUint8
 	numberOfByteValues          = byteMaxValue + 1
-	maxContainerSizeBeforeBurst = 1 << 14
+	maxContainerSizeBeforeBurst = 1 << 1
 	initialContainerSize        = 1 << 12
 )
 
-// We don't need the delete and get methods for the FSA use case.
-// The exposed iterator can also always interate in a sorted order.
-// TODO: Do we need to handle empty/nil key pairs?
 type Trie struct {
 	*trieNode
-	// We can easily keep track of the longest key size because we don't need to delete from the HAT-trie.
-	// We use this value to prevent reallocating slices when iterating through the HAT-trie.
-	longestKeySize int
 }
 
-// New returns a pointer to a new Trie.
-// The trie is initialized to be empty.
 func New() *Trie {
 	c := newTrieContainer(initialContainerSize)
 	c.hybrid = true
@@ -38,16 +30,8 @@ func New() *Trie {
 	}
 }
 
-// We ignore the empty key "" to simplify the code. That should be ok in the context of FSA.
 func (t *Trie) Put(key string, value Value) {
-	// TODO: Check if this optimization is worth it.
-	size := len(key)
-	if size > t.longestKeySize {
-		t.longestKeySize = size
-	}
-
 	nearest, parent, prefixIdx := t.trieNode.findNearest(key)
-
 	remainingKey := key[prefixIdx:]
 
 	switch n := nearest.(type) {
@@ -70,6 +54,74 @@ func (t *Trie) Put(key string, value Value) {
 
 		for len(n.pairs) >= maxContainerSizeBeforeBurst {
 			parent, n = parent.splitContainer(n)
+		}
+	}
+}
+
+type stackItem struct {
+	prefix  *byte
+	item    node
+	visited bool
+}
+
+func (t *Trie) ForEach(fn func(key string, value Value)) {
+	stack := make([]*stackItem, 0, numberOfByteValues+1)
+	stack = append(stack, &stackItem{
+		prefix:  nil,
+		visited: false,
+		item:    t.trieNode,
+	})
+
+	prefix := make([]byte, 0)
+
+	for len(stack) > 0 {
+		n := stack[len(stack)-1]
+
+		switch t := n.item.(type) {
+		case *trieNode:
+			if n.visited {
+				stack = stack[:len(stack)-1]
+				if len(prefix) > 0 {
+					prefix = prefix[:len(prefix)-1]
+				}
+				continue
+			}
+
+			if n.prefix != nil {
+				prefix = append(prefix, *n.prefix)
+			}
+
+			if t.validValue {
+				fn(string(prefix), t.value)
+			}
+
+			var previousChild node
+			for i := byteMaxValue; i >= 0; i-- {
+				if t.children[i] != nil && t.children[i] != previousChild {
+					p := byte(i)
+					stack = append(stack, &stackItem{
+						prefix:  &p,
+						visited: false,
+						item:    t.children[i],
+					})
+				}
+				previousChild = t.children[i]
+			}
+			n.visited = true
+		case *trieContainer:
+			for _, key := range t.SortedKeys() {
+				if t.hybrid {
+					hybridPrefix := prefix
+					if len(prefix) > 0 {
+						hybridPrefix = prefix[:len(prefix)-1]
+					}
+
+					fn(string(append(hybridPrefix, key...)), t.pairs[key])
+				} else {
+					fn(string(append(prefix, key...)), t.pairs[key])
+				}
+			}
+			stack = stack[:len(stack)-1]
 		}
 	}
 }

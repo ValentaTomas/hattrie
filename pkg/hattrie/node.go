@@ -1,14 +1,8 @@
 package hattrie
 
-// Usign interface and struct assertion between trieNode and trieContainer.
-// This way we don't have to embed trieNode and trieContainer and differentiate between them based on a nil pointer or
-// have overhead from using interface methods.
 type node interface{}
 
 type trieNode struct {
-	// We can directly use byte as an index into the array - the array then behaves like a map with a fixed size and no additional overhead.
-	// TODO: Make the trie more compact by using arrays with size 128 - splitting the byte into two nodes each handling 4 bits.
-	// The second node would be present only if necessary and would be a child of the first node.
 	children   [numberOfByteValues]node
 	value      Value
 	validValue bool
@@ -17,8 +11,6 @@ type trieNode struct {
 func newTrieNode(child node) *trieNode {
 	t := &trieNode{}
 
-	// https://groups.google.com/g/golang-dev/c/35W8LvT51vg
-	// Prevent range over array copy with &.
 	for i := range &t.children {
 		t.children[i] = child
 	}
@@ -66,6 +58,8 @@ func (n *trieNode) splitContainer(child *trieContainer) (*trieNode, *trieContain
 		}
 
 		child.hybrid = true
+		child.splitStart = 0
+		child.splitEnd = byteMaxValue
 		return newParent, child
 	}
 
@@ -80,18 +74,19 @@ func (n *trieNode) splitContainer(child *trieContainer) (*trieNode, *trieContain
 	leftSize := occurrences[split]
 	rightSize := totalSize - leftSize
 
-	for i, o := range occurrences[1:] {
+	// for split+1 < int(child.splitEnd) {
+	// o := occurrences[split+1]
+	for _, o := range occurrences[split+1 : child.splitEnd] {
 		delta := abs((leftSize + o) - (rightSize - o))
 		if delta <= leftSize-rightSize && leftSize+o < totalSize {
-			split = i
+			split++
 			leftSize += o
-			rightSize += o
+			rightSize -= o
 		} else {
 			break
 		}
 	}
 
-	// TODO: Handle the preallocation and special cases better.
 	left := newTrieContainer(leftSize)
 
 	left.splitStart = child.splitStart
@@ -110,19 +105,35 @@ func (n *trieNode) splitContainer(child *trieContainer) (*trieNode, *trieContain
 		right.hybrid = true
 	}
 
-	for i := left.splitStart; i <= left.splitEnd; i++ {
+	for i := left.splitStart; ; i++ {
 		n.children[i] = left
+
+		if i == left.splitEnd {
+			break
+		}
 	}
 
-	for i := right.splitStart; i <= right.splitEnd; i++ {
+	for i := right.splitStart; ; i++ {
 		n.children[i] = right
+
+		if i == right.splitEnd {
+			break
+		}
 	}
 
 	for k, v := range child.pairs {
 		if k[0] <= left.splitEnd {
-			left.Insert(k, v)
+			if left.hybrid {
+				left.Insert(k, v)
+			} else {
+				left.Insert(k[1:], v)
+			}
 		} else {
-			right.Insert(k, v)
+			if right.hybrid {
+				right.Insert(k, v)
+			} else {
+				right.Insert(k[1:], v)
+			}
 		}
 	}
 
@@ -140,75 +151,4 @@ func abs(a int) int {
 		return a
 	}
 	return -a
-}
-
-type stackItem struct {
-	prefix  *byte
-	item    node
-	visited bool
-}
-
-// FSA needs to process all pairs, so we don't have to implement an iterator.
-// TODO: Check if using the function (that can use closure) is affecting performance too much.
-func (t *Trie) ForEach(fn func(key string, value Value)) {
-	// TODO: What is the ideal size for the preallocated stack?
-	stack := make([]*stackItem, 0, numberOfByteValues+1)
-	stack = append(stack, &stackItem{
-		prefix:  nil,
-		visited: false,
-		item:    t.trieNode,
-	})
-
-	prefix := make([]byte, 0, t.longestKeySize)
-
-	for len(stack) > 0 {
-		n := stack[len(stack)-1]
-
-		switch t := n.item.(type) {
-		case *trieNode:
-			if n.visited {
-				stack = stack[:len(stack)-1]
-				if len(prefix) > 0 {
-					prefix = prefix[:len(prefix)-1]
-				}
-				continue
-			}
-
-			if n.prefix != nil {
-				prefix = append(prefix, *n.prefix)
-			}
-
-			if t.validValue {
-				fn(string(prefix), t.value)
-			}
-
-			var previousChild node
-			for i := byteMaxValue; i >= 0; i-- {
-				if t.children[i] != nil && t.children[i] != previousChild {
-					p := byte(i)
-					stack = append(stack, &stackItem{
-						prefix:  &p,
-						visited: false,
-						item:    t.children[i],
-					})
-				}
-				previousChild = t.children[i]
-			}
-			n.visited = true
-		case *trieContainer:
-			for _, key := range t.SortedKeys() {
-				if t.hybrid {
-					hybridPrefix := prefix
-					if len(prefix) > 0 {
-						hybridPrefix = prefix[:len(prefix)-1]
-					}
-
-					fn(string(append(hybridPrefix, key...)), t.pairs[key])
-				} else {
-					fn(string(append(prefix, key...)), t.pairs[key])
-				}
-			}
-			stack = stack[:len(stack)-1]
-		}
-	}
 }
