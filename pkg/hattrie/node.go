@@ -74,8 +74,6 @@ func (n *trieNode) splitContainer(child *trieContainer) (*trieNode, *trieContain
 	leftSize := occurrences[split]
 	rightSize := totalSize - leftSize
 
-	// for split+1 < int(child.splitEnd) {
-	// o := occurrences[split+1]
 	for _, o := range occurrences[split+1 : child.splitEnd] {
 		delta := abs((leftSize + o) - (rightSize - o))
 		if delta <= leftSize-rightSize && leftSize+o < totalSize {
