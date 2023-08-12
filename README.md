@@ -55,6 +55,7 @@ make benchmark
 - https://reader.elsevier.com/reader/sd/pii/S0304397512003787?token=8F9D18B0B717058FD51BB489E748AAA0DF138B0F65C0576398B6985CB45262B88779E7DE3AB4A01DEA11E481C991474B&originRegion=eu-west-1&originCreation=20230204163136
 - https://aclanthology.org/J00-1002.pdf
 - https://github.com/ricardoerikson/benchmark-golang-maps
+- https://cstheory.stackexchange.com/questions/1539/whats-new-in-purely-functional-data-structures-since-okasaki
 
 ## Code Reference
 - Burst trie - https://github.com/nlfiedler/sortingo/blob/master/sort/burstsort.go
