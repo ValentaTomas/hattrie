@@ -1,6 +1,4 @@
-# FSA3
-Dynamically creating a FSA that can then be used to effectively map between words in a big corpus and a number index.
-This can be also used for things like keyword extraction.
+# HAT-trie
 
 ## Usage
 
