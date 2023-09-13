@@ -1,4 +1,4 @@
-# HAT-trie
+# [WIP] HAT-trie
 
 ## Usage
 
