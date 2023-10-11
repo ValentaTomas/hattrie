@@ -33,7 +33,7 @@ jobs:
           go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.50.1
 
       - name: Install GoReleaser
-        uses: goreleaser/goreleaser-action@v4
+        uses: goreleaser/goreleaser-action@v5
         with:
           install-only: true
 
